@@ -1,0 +1,65 @@
+.title Libre Solar DC/DC converter simulation
+
+* from LTspice
+*.model Si7336ADP VDMOS(Rg=3.5 Rd=1.2m Rs=800u mtriode=1.9 lambda=0.01 Vto=2.9 Ksubthres=100m Kp=280 Cgdmax=1.6n Cgdmin=200p A=1.5 Cgs=5.2n Cjo=3n M=.5 Is=5p Rb=3m Vds=30 Ron=2.4m Qg=36n)
+.model Si7336ADP NMOS(Rd=1.2m Rs=800u lambda=0.01 Vto=2.9 Ksubthres=100m Kp=280 Cgs=5.2n M=.5 Is=5p Rb=3m Vds=30)
+.model 1N4148 D(Is=2.52n Rs=.568 N=1.752 Cjo=4p M=.4 tt=20n)
+.model MBRS360 D(Is=22.6u Rs=.042 N=1.094 Cjo=480p M=.61 Eg=.69 Xti=2)
+
+*.include IRFZ44N.sub
+.include 2n7002k.mod
+.include SolarPanel60s.sub
+
+* https://sourceforge.net/u/platise/ngspice/ci/master/tree/src/xspice/icm/digital/d_process/ifspec.ifs
+
+* PWM signal generation
+V9 1 gnd dc 2
+ain 1 2 pulse1
+.model pulse1 square(cntl_array = [-1 0 5 6]
++ freq_array=[10 10 100k 100k] out_low = 0.0
++ out_high = 4.5 duty_cycle = 0.2
++ rise_time = 1e-6 fall_time = 2e-6)
+
+* Solar panel
+Xpvmodule hs gnd SolarPanel60s Isc=10
+
+* Input filter (high voltage side)
+Cin cin gnd 100u ic=30
+Resr_in cin hs 50m
+
+* Load resistor for testing
+Rload_hs hs gnd 120R
+
+* High-side MOSFET
+*D1 sw hs 1N4148
+XQhs hs gate_hs sw 2n7002k
+Vpwm_hs pwm_hs sw 0 PULSE(0 10 3.2u 10n 10n 6.6u 10u)
+Rg_hs gate_hs pwm_hs 10R
+
+* Low-side MOSFET
+* MOSFETs pins: D G S S
+*M1 bat gate gnd gnd Si7336ADP
+*XQ1 0  gate bat 0 MOSFETs_IRFZ44N
+XQls sw gate_ls gnd 2n7002k
+Vpwm_ls pwm_ls gnd 0 PULSE(0 10 0 10n 10n 3u 10u)
+Rg_ls gate_ls pwm_ls 10R
+
+L1 bat sw 22u
+
+* Output filter
+Cout cout gnd 220u ic=12
+Resr_out cout bat 30m
+
+* Battery
+Vbat ocvbat gnd dc 12V
+Rs_bat ocvbat bat 50m
+
+.control
+tran 100u 10m uic
+rusage trantime traniter
+plot gate_ls gate_hs hs sw
+*plot v(1) v(2)
+*destroy all
+.endc
+
+.end

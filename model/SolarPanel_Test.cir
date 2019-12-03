@@ -1,0 +1,18 @@
+.title Solar Cell test
+
+.include "SolarPanel60s.sub"
+
+Xpvpanel hs gnd SolarPanel60s Isc=10
+
+I1 hs rs 0
+
+* To generate an x axis with the current flow (1mV = 1A)
+R1 gnd rs 1m
+
+.control
+dc I1 0 10 0.1
+plot hs vs rs
+*destroy all
+.endc
+
+.end

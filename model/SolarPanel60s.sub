@@ -1,0 +1,89 @@
+* 60 cell solar panel subcircuit
+* Isc = short circuit current
+
+.subckt SolarPanel60s A K params: Isc=10
+I1 A K {-Isc}
+
+* assuming 1A for standard diode, Isc scales area (factor m)
+D1   A  1 cell m={Isc}
+D2   1  2 cell m={Isc}
+D3   2  3 cell m={Isc}
+D4   3  4 cell m={Isc}
+D5   4  5 cell m={Isc}
+D6   5  6 cell m={Isc}
+D7   6  7 cell m={Isc}
+D8   7  8 cell m={Isc}
+D9   8  9 cell m={Isc}
+D10  9 10 cell m={Isc}
+
+D11 10 11 cell m={Isc}
+D12 11 12 cell m={Isc}
+D13 12 13 cell m={Isc}
+D14 13 14 cell m={Isc}
+D15 14 15 cell m={Isc}
+D16 15 16 cell m={Isc}
+D17 16 17 cell m={Isc}
+D18 17 18 cell m={Isc}
+D19 18 19 cell m={Isc}
+D20 19 20 cell m={Isc}
+
+D21 20 21 cell m={Isc}
+D22 21 22 cell m={Isc}
+D23 22 23 cell m={Isc}
+D24 23 24 cell m={Isc}
+D25 24 25 cell m={Isc}
+D26 25 26 cell m={Isc}
+D27 26 27 cell m={Isc}
+D28 27 28 cell m={Isc}
+D29 28 29 cell m={Isc}
+D30 29 30 cell m={Isc}
+
+D31 30 31 cell m={Isc}
+D32 31 32 cell m={Isc}
+D33 32 33 cell m={Isc}
+D34 33 34 cell m={Isc}
+D35 34 35 cell m={Isc}
+D36 35 36 cell m={Isc}
+D37 36 37 cell m={Isc}
+D38 37 38 cell m={Isc}
+D39 38 39 cell m={Isc}
+D40 39 40 cell m={Isc}
+
+D41 40 41 cell m={Isc}
+D42 41 42 cell m={Isc}
+D43 42 43 cell m={Isc}
+D44 43 44 cell m={Isc}
+D45 44 45 cell m={Isc}
+D46 45 46 cell m={Isc}
+D47 46 47 cell m={Isc}
+D48 47 48 cell m={Isc}
+D49 48 49 cell m={Isc}
+D50 49 50 cell m={Isc}
+
+D51 50 51 cell m={Isc}
+D52 51 52 cell m={Isc}
+D53 52 53 cell m={Isc}
+D54 53 54 cell m={Isc}
+D55 54 55 cell m={Isc}
+D56 55 56 cell m={Isc}
+D57 56 57 cell m={Isc}
+D58 57 58 cell m={Isc}
+D59 58 59 cell m={Isc}
+D60 59 K  cell m={Isc}
+
+*D61 60 61 cell m={Isc}
+*D62 61 62 cell m={Isc}
+*D63 62 63 cell m={Isc}
+*D64 63 64 cell m={Isc}
+*D65 64 65 cell m={Isc}
+*D66 65 66 cell m={Isc}
+*D67 66 67 cell m={Isc}
+*D68 67 68 cell m={Isc}
+*D69 68 69 cell m={Isc}
+*D70 69 70 cell m={Isc}
+
+Rp A K {1*60}
+.model cell D Rs=5m
++ Is=315n n=1.65 Cjo=50u
++ Tnom=25 Trs1=10m Trs2=0m1
+.ends SolarPanel60s
