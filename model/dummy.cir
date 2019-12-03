@@ -1,0 +1,72 @@
+.title DCDC unit test dummy (for testing of d_process)
+
+.include "ad12.mod"
+.include "pwm.mod"
+
+*----------------------------------------------------------------------
+* Interface to Firmware with optional parameters Kp and Ki
+*----------------------------------------------------------------------
+.model firmware d_process (process_file="dcdc_utest" process_params=["Kp=10", "Ki=2"])
+Acontrol [d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11]
++ adclk drst [w0 w1 w2 w3 w4 w5 w6 w7] firmware
+
+
+*----------------------------------------------------------------------
+* PSoC Internals
+*----------------------------------------------------------------------
+Vrst rst 0 DC(0) PULSE(0 5 0.5us 10ns 10ns 2us)
+.model adc_buff adc_bridge(in_low = 1 in_high = 1)
+Aabridge [rst] [drst] adc_buff
+
+.model ad_clk_m d_osc(cntl_array=[0 1] freq_array=[512e3 512e3])
+Aadclk 0 adclk ad_clk_m
+.model pwm_clk_m d_osc(cntl_array=[0 1] freq_array=[4.096e6 4.096e6])
+Apwmclk 0 pwmclk pwm_clk_m
+
+
+*----------------------------------------------------------------------
+* Differential A/D Senses directly on 1R Sense Resistor
+* At gain 1. Inside the PSoC5 we could use two inverting PGA to form
+* an instrumentational amplifier and so increase the gain to sense
+* current on lower valued resistors.
+*----------------------------------------------------------------------
+
+* vddio only relevant for ADC circuit internals
+Vin vddio 0 DC(3.3)
+
+* internal reference voltage of the ADC
+Vref ref 0 DC(2.048)
+
+* vadc = ADC input (must be below ref)
+Vsolar vsolar 0 DC(60)
+R1 vsolar vadc 100k
+R2 vadc 0 2.2k
+
+Xad vadc ref vddio adclk d11 d10 d9 d8 d7 d6 d5 d4 d3 d2 d1 d0 ad12
+
+*----------------------------------------------------------------------
+* Output PWM
+*----------------------------------------------------------------------
+Xpwm pwmclk drst w0 w1 w2 w3 w4 w5 w6 w7 dpwm PWM
+
+.model dac_buff dac_bridge
+Adbridge [dpwm] [pwma] dac_buff
+Bpwmo pwm 0 V=v(pwma)*v(vddio)
+
+*Abridge1 [w0 w1 w2 w3 w4 w5 w6 w7] [vpwm] dac1
+*.model dac1 dac_bridge(out_low = 0.7 out_high = 3.5 out_undef = 2.2
+*+ input_load = 5.0e-12 t_rise = 50e-9
+*+ t_fall = 20e-9)
+
+*Abridge2 [vout] [d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11] adc_buff
+*.model adc_buff adc_bridge(in_low = 0.3 in_high = 3.5)
+
+.control
+tran 100ns 10ms uic
+rusage trantime traniter
+*plot gate_ls gate_hs hs sw
+plot vddio dpwm
+*destroy all
+.endc
+
+.end
