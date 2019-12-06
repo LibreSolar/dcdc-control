@@ -1,0 +1,102 @@
+.title Libre Solar DC/DC converter simulation
+
+.include "SolarPanel60s.sub"
+.include "2n7002k.mod"
+.include "ad12.mod"
+.include "pwm.mod"
+
+.model 1N4148 D(Is=2.52n Rs=.568 N=1.752 Cjo=4p M=.4 tt=20n)
+
+*----------------------------------------------------------------------
+* Interface to Firmware with optional parameters Kp and Ki
+*----------------------------------------------------------------------
+.model firmware d_process (process_file="dcdc_utest" process_params=["Kp=10", "Ki=2"])
+Acontrol [d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11]
++ adclk drst [w0 w1 w2 w3 w4 w5 w6 w7] firmware
+
+*----------------------------------------------------------------------
+* PSoC Internals
+*----------------------------------------------------------------------
+Vrst rst 0 DC(0) PULSE(0 5 0.5us 10ns 10ns 2us)
+.model adc_buff adc_bridge(in_low = 1 in_high = 1)
+Aabridge [rst] [drst] adc_buff
+
+.model ad_clk_m d_osc(cntl_array=[0 1] freq_array=[512e3 512e3])
+Aadclk 0 adclk ad_clk_m
+.model pwm_clk_m d_osc(cntl_array=[0 1] freq_array=[4.096e6 4.096e6])
+Apwmclk 0 pwmclk pwm_clk_m
+
+
+*----------------------------------------------------------------------
+* Differential A/D Senses directly on 1R Sense Resistor
+* At gain 1. Inside the PSoC5 we could use two inverting PGA to form
+* an instrumentational amplifier and so increase the gain to sense
+* current on lower valued resistors.
+*----------------------------------------------------------------------
+
+* vddio only relevant for ADC circuit internals
+Vin vddio 0 DC(3.3)
+
+* internal reference voltage of the ADC
+Vref ref 0 DC(2.048)
+
+* vadc = ADC input (must be below ref)
+Vsolar vsolar 0 DC(60)
+R1 vsolar vadc 100k
+R2 vadc 0 2.2k
+
+Xad vadc ref vddio adclk d11 d10 d9 d8 d7 d6 d5 d4 d3 d2 d1 d0 ad12
+
+*----------------------------------------------------------------------
+* Output PWM
+*----------------------------------------------------------------------
+Xpwm pwmclk drst w0 w1 w2 w3 w4 w5 w6 w7 dpwm PWM
+
+.model dac_buff dac_bridge
+Adbridge [dpwm] [pwma] dac_buff
+Bpwmo pwm 0 V=v(pwma)*v(vddio)
+
+
+* Solar panel
+Xpvmodule hs gnd SolarPanel60s Isc=10
+
+* Input filter (high voltage side)
+Cin cin gnd 100u ic=30
+Resr_in cin hs 50m
+
+* Load resistor for testing
+Rload_hs hs gnd 120R
+
+* High-side MOSFET
+D1 sw hs 1N4148
+*XQhs hs gate_hs sw 2n7002k
+*Vpwm_hs pwm_hs sw 0 PULSE(0 10 3.2u 10n 10n 6.6u 10u)
+*Rg_hs gate_hs pwm_hs 10R
+
+* Low-side MOSFET
+* MOSFETs pins: D G S S
+*M1 bat gate gnd gnd Si7336ADP
+*XQ1 0  gate bat 0 MOSFETs_IRFZ44N
+XQls sw gate_ls gnd 2n7002k
+*Vpwm_ls pwm_ls gnd 0 PULSE(0 10 0 10n 10n 3u 10u)
+Rg_ls gate_ls pwm 10R
+
+L1 bat sw 22u
+
+* Output filter
+Cout cout gnd 220u ic=12
+Resr_out cout bat 30m
+
+* Battery
+Vbat ocvbat gnd dc 12V
+Rs_bat ocvbat bat 50m
+
+.control
+tran 100ns 1ms uic
+rusage trantime traniter
+plot gate_ls hs sw pwm
+*plot vddio dpwm pwm
+*destroy all
+.endc
+
+.end
