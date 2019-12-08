@@ -15,12 +15,12 @@
  * Function is called at A/D Sample Rate, and accumulates 64 samples, then
  * executes simple PI regulator and outputs an 8-bit PWM.
  */
-uint8_t dcdc_controller(uint32_t sample, int32_t Kp, int32_t Ki, uint8_t reset)
+uint16_t dcdc_controller(uint32_t sample, int32_t Kp, int32_t Ki, uint8_t reset)
 {
     static uint8_t ad_sample_count = 0;
     static int32_t sample_acc = 0;
     static int32_t integ = (200*12/30 * 2) << REGULATOR_SCALE_SHIFT;      // initialize properly;
-    static uint8_t pwm = 200*12/30;
+    static uint16_t pwm = 200*12/30;
 
     if (reset) {
         fprintf(stderr, "Firmware Reset\n");

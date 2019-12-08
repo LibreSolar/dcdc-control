@@ -3,11 +3,11 @@
 
 module pwm(clk, rst, compare, hs, ls);
     input clk, rst;
-    input [8:1] compare;    // capture/compare register
+    input [16:1] compare;   // capture/compare register
     output reg hs;          // high-side PWM output
     output reg ls;          // low-side PWM output
 
-    reg [8:1] cnt;          // timer counter register
+    reg [16:1] cnt;          // timer counter register
 
     parameter arr = 200;    // auto-reload register (determines frequency)
     parameter dt = 2;       // dead time

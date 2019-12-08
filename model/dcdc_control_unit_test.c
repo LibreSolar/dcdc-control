@@ -2,6 +2,8 @@
  * \file
  * \brief Motor Force NGspice Unit-Test Runner
  * \author Uros Platise <uros@isotel.eu>
+ *
+ * Modified by Martin Jäger
  */
 
 #include <string.h>
@@ -10,9 +12,9 @@
 #include "d_process.h"
 
 #define DIGITAL_IN      12      // 12-bit input from A/D
-#define DIGITAL_OUT     8       // 8-bit output to PWM.width
+#define DIGITAL_OUT     16      // 16-bit output to PWM
 
-extern uint8_t dcdc_controller(int32_t sample, int32_t Kp, int32_t Ki, uint8_t reset);
+extern uint16_t dcdc_controller(int32_t sample, int32_t Kp, int32_t Ki, uint8_t reset);
 
 int main(int argc, char *argv[])
 {
