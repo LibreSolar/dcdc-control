@@ -3,9 +3,12 @@
 .include "solar/solar_panel_60s.sub"
 .include "adc/ad12.mod"
 .include "pwm/pwm.mod"
-.include "2n7002k.mod"
 
 .model 1N4148 D(Is=2.52n Rs=.568 N=1.752 Cjo=4p M=.4 tt=20n)
+.model MBRS360 D(Is=22.6u Rs=.042 N=1.094 Cjo=480p M=.61 Eg=.69 Xti=2)
+
+* from LTspice
+.model Si7336ADP VDMOS(Rg=3.5 Rd=1.2m Rs=800u mtriode=1.9 lambda=0.01 Vto=2.9 Ksubthres=100m Kp=280 Cgdmax=1.6n Cgdmin=200p A=1.5 Cgs=5.2n Cjo=3n M=.5 Is=5p Rb=3m Vds=30 Ron=2.4m Qg=36n)
 
 .model a2d adc_bridge(in_low=0.5 in_high=0.5)
 .model d2a dac_bridge
@@ -57,16 +60,12 @@ Resr_in cin hs 50m
 *Rload_hs hs gnd 50R
 
 * High-side MOSFET
-*D1 sw hs 1N4148
-XQhs hs gate_hs sw 2n7002k
-Rg_hs gate_hs pwm_hs 10R
+Mhs hs gate_hs sw Si7336ADP
+Rg_hs gate_hs pwm_hs 20R
 
 * Low-side MOSFET
-* MOSFETs pins: D G S S
-*M1 bat gate gnd gnd Si7336ADP
-*XQ1 0  gate bat 0 MOSFETs_IRFZ44N
-XQls sw gate_ls gnd 2n7002k
-Rg_ls gate_ls pwm_ls 10R
+Mls sw gate_ls gnd Si7336ADP
+Rg_ls gate_ls pwm_ls 20R
 
 * Main inductor and current measurement shunt
 L1 sw shunt 22u
