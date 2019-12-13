@@ -7,7 +7,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define DESIRED_VOLTAGE         (30*2.2/100*4096/2.048)
+#define DESIRED_VOLTAGE         (30*2.2/102.2*4096/2.048)
+#define ADC_FACTOR              (102.2/2.2*2.048/4096)
 #define REGULATOR_SCALE_SHIFT   6       // Kp, and Ki are multiplied by 2^6
 #define TIMER_ARR               180     // defines maximum PWM setting
 
@@ -15,7 +16,8 @@
  * Function is called at A/D Sample Rate, and accumulates 64 samples, then
  * executes simple PI regulator and outputs an 8-bit PWM.
  */
-uint16_t dcdc_controller(uint32_t sample, int32_t Kp, int32_t Ki, uint8_t reset)
+uint16_t dcdc_controller(uint16_t hv_adc, uint16_t lv_adc, uint16_t shunt_adc,
+    int32_t Kp, int32_t Ki, uint8_t reset)
 {
     static uint8_t ad_sample_count = 0;
     static int32_t sample_acc = 0;
@@ -41,11 +43,13 @@ uint16_t dcdc_controller(uint32_t sample, int32_t Kp, int32_t Ki, uint8_t reset)
             // simplified controller
             pwm += (sample_acc > DESIRED_VOLTAGE) ? 1 : -1;
 
-            fprintf(stderr, "I = %d, e = %d, integ = %d, PWM = %d, desired: %d\n", sample_acc, e, integ, pwm, (int)DESIRED_VOLTAGE);
+            fprintf(stderr, "hv %.3fV, lv %.3fV, i %.3fA, e = %d, integ = %d, PWM = %d, desired: %d\n",
+                (float)hv_adc * ADC_FACTOR, (float)lv_adc * ADC_FACTOR, (float)(shunt_adc - lv_adc) * 500 * ADC_FACTOR,
+                e, integ, pwm, (int)DESIRED_VOLTAGE);
             sample_acc = 0;
         }
         else {
-            sample_acc += sample;
+            sample_acc += hv_adc;
         }
     }
     return pwm;

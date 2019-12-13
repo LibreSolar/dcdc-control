@@ -11,10 +11,11 @@
 #include <fcntl.h>
 #include "d_process.h"
 
-#define DIGITAL_IN      12      // 12-bit input from A/D
+#define DIGITAL_IN      (3*12)  // 3 x 12-bit input from A/D
 #define DIGITAL_OUT     16      // 16-bit output to PWM
 
-extern uint16_t dcdc_controller(int32_t sample, int32_t Kp, int32_t Ki, uint8_t reset);
+extern uint16_t dcdc_controller(uint16_t hv_adc, uint16_t lv_adc, uint16_t i_adc,
+    int32_t Kp, int32_t Ki, uint8_t reset);
 
 int main(int argc, char *argv[])
 {
@@ -60,10 +61,17 @@ int main(int argc, char *argv[])
      */
     if (d_process_init(pipein, pipeout, DIGITAL_IN, DIGITAL_OUT) ) {
         while(read(pipein, &in, sizeof(in)) == sizeof(in)) {
+            // create single 16-bit values from concatenated 12-bits ADC values packed in 5 bytes
+            //
+            // | byte4 | byte3 | byte2 | byte1 | byte0 |
+            // | F | F | F | F | F | F | F | F | F | F |
+            //     |   i_adc   |   lv_adc  |   hv_adc  |
             out.dout[0] = dcdc_controller(
-                ((uint16_t)(in.din[1])<<8) + (uint16_t)in.din[0],   // create a 16-bit value from 12-bits packed in 2 bytes
-                Kp, Ki,                                             // user parameters from ngspice cicuit file
-                in.time < 0);                                       // negative time denotes d_process.reset=1
+                (((uint16_t)(in.din[1]) << 8) + ((uint16_t)(in.din[0]) >> 0)) & 0x0FFF,
+                (((uint16_t)(in.din[2]) << 4) + ((uint16_t)(in.din[1]) >> 4)) & 0x0FFF,
+                (((uint16_t)(in.din[4]) << 8) + ((uint16_t)(in.din[3]) >> 0)) & 0x0FFF,
+                Kp, Ki,                     // user parameters from ngspice cicuit file
+                in.time < 0);               // negative time denotes d_process.reset=1
 
             write(pipeout, &out, sizeof(out));
         }

@@ -15,8 +15,11 @@
 
 * Interface to Firmware with optional parameters Kp and Ki
 .model firmware d_process (process_file="dcdc_utest" process_params=["Kp=10", "Ki=2"])
-Acontrol [d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11]
-+ adclk drst [w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w10 w11 w12 w13 w14 w15] firmware
+Acontrol [
+    + hv0 hv1 hv2 hv3 hv4 hv5 hv6 hv7 hv8 hv9 hv10 hv11
+    + lv0 lv1 lv2 lv3 lv4 lv5 lv6 lv7 lv8 lv9 lv10 lv11
+    + i0 i1 i2 i3 i4 i5 i6 i7 i8 i9 i10 i11]
+    + adclk drst [w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w10 w11 w12 w13 w14 w15] firmware
 
 * Generate ADC clock
 Vadclk aadclk gnd 0 PULSE(0 1 0 1n 1n 156.25n 312.5n)
@@ -30,13 +33,18 @@ Apwmclk [apwmclk] [pwmclk] a2d
 Vin vddio 0 DC(3.3)
 Vref ref 0 DC(2.048)
 
-* vadc = ADC input (must be below ref)
-*Vsolar hs 0 DC(60)
-R1 hs vadc 100k
-R2 vadc 0 2.2k
+* Voltage dividers for ADC input (must be below ref)
+R1 hs hv_adc 100k
+R2 hv_adc 0 2.2k
+R3 bat lv_adc 100k
+R4 lv_adc 0 2.2k
+R5 shunt i_adc 100k
+R6 i_adc 0 2.2k
 
-* Convert analog reading to digital ADC value
-Xad vadc ref vddio adclk d11 d10 d9 d8 d7 d6 d5 d4 d3 d2 d1 d0 ad12
+* Convert analog reading to digital 12-bit ADC value
+Xadhv hv_adc ref vddio adclk hv11 hv10 hv9 hv8 hv7 hv6 hv5 hv4 hv3 hv2 hv1 hv0 ad12
+Xadlv lv_adc ref vddio adclk lv11 lv10 lv9 lv8 lv7 lv6 lv5 lv4 lv3 lv2 lv1 lv0 ad12
+Xadi   i_adc ref vddio adclk  i11  i10  i9  i8  i7  i6  i5  i4  i3  i2  i1  i0 ad12
 
 * Generate digital HS and LS PWM signals from compare register value received from control function
 Xpwm pwmclk drst w0 w1 w2 w3 w4 w5 w6 w7 w8 w9 w10 w11 w12 w13 w14 w15 dpwm_hs dpwm_ls PWM
