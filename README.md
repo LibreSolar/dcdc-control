@@ -12,8 +12,8 @@ Some preliminary documentation of the approach can be found [here](http://learn.
 
 ## Firmware-in-the-loop model
 
-**Purpose:** Co-simulation of controller firmware implementation (C/C++) and SPICE model
+**Purpose:** Co-simulation of controller firmware implementation (C/C++) and Ngspice model
 
-See `model` subfolder.
+See `ngspice` subfolder.
 
 Based on: https://www.isotel.eu/mixedsim/embedded/motorforce/index.html#
